@@ -10,6 +10,10 @@ This tool was designed specifically for downloading big files from onion service
 
 **This way of utilizing Tor network reduces your anonymity!**
 
+## Requirements
+
+* `tor`
+
 ## Installation
 
 `$ pip install torboost`
@@ -38,9 +42,9 @@ options:
   -p TOR_PROCESSES, --tor-processes TOR_PROCESSES
                         Number of Tor processes (default: 5)
   --control-port-start CONTROL_PORT_START
-                        Start port for Tor control (default: 10080)
+                        First port for Tor control (default: 10080)
   --socks-port-start SOCKS_PORT_START
-                        Start port for SOCKS (default: 9080)
+                        First port for SOCKS (default: 9080)
   --timeout TIMEOUT     Timeout for Tor relay connection (default: 300)
   --chunk-size CHUNK_SIZE
                         Size of a single download block (in bytes) (default: 50000000)
