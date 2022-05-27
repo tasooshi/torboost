@@ -11,7 +11,7 @@ import threading
 import urllib3.exceptions
 
 
-__version__ = '0.9.0'
+__version__ = '0.9.1'
 
 
 logging.basicConfig(format='%(name)s %(levelname)s [%(asctime)s] %(message)s', level=logging.INFO)
@@ -164,8 +164,8 @@ def entry_point():
     )
     parser.add_argument('-u', '--url', required=True, help='Download URL')
     parser.add_argument('-p', '--tor-processes', default=5, type=int, help='Number of Tor processes')
-    parser.add_argument('--control-port-start', default=10080, help='First port for Tor control')
-    parser.add_argument('--socks-port-start', default=9080, help='First port for SOCKS')
+    parser.add_argument('--control-port-start', type=int, default=10080, help='First port for Tor control')
+    parser.add_argument('--socks-port-start', type=int, default=9080, help='First port for SOCKS')
     parser.add_argument('--timeout', default=300, help='Timeout for Tor relay connection')
     parser.add_argument('--chunk-size', default=50000000, help='Size of a single download block (in bytes)')
     parser.add_argument('--user-agent', default=default_headers['User-Agent'], help='User-Agent header')
