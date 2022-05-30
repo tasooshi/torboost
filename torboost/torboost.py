@@ -1,6 +1,7 @@
 from urllib import parse
 import argparse
 import hashlib
+import json
 import logging
 import pathlib
 import queue
@@ -11,7 +12,7 @@ import threading
 import urllib3.exceptions
 
 
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 
 logging.basicConfig(format='%(name)s %(levelname)s [%(asctime)s] %(message)s', level=logging.INFO)
@@ -26,6 +27,10 @@ class TorBoost:
 
     def __init__(self, args):
         self.args = args
+        self.config = dict()
+        if self.args.config:
+            with open(self.args.config, 'r') as fil:
+                self.config = json.loads(fil.read())
         self.procs = dict()
         self.content_size = None
         self.queue = queue.Queue()
@@ -97,7 +102,9 @@ class TorBoost:
             'SocksPort': str(socks_port),
             'ControlPort': str(control_port),
             'DataDirectory': str(data_dir),
+            'CookieAuthentication': '1',
         }
+        config.update(self.config)
         logger.info(f'Bootstrapping Tor process {proc_no}')
         logger.debug(f'with config: {config}')
         proc = stem.process.launch_tor_with_config(
@@ -163,14 +170,16 @@ def entry_point():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('-u', '--url', required=True, help='Download URL')
-    parser.add_argument('-p', '--tor-processes', default=5, type=int, help='Number of Tor processes')
+    parser.add_argument('-p', '--tor-processes', type=int, default=5, help='Number of Tor processes')
     parser.add_argument('--control-port-start', type=int, default=10080, help='First port for Tor control')
     parser.add_argument('--socks-port-start', type=int, default=9080, help='First port for SOCKS')
-    parser.add_argument('--timeout', default=300, help='Timeout for Tor relay connection')
+    parser.add_argument('--timeout', type=int, default=300, help='Timeout for Tor relay connection')
     parser.add_argument('--chunk-size', default=50000000, help='Size of a single download block (in bytes)')
     parser.add_argument('--user-agent', default=default_headers['User-Agent'], help='User-Agent header')
+    parser.add_argument('--config', help='Custom Tor configuration file (JSON)')
     parser.add_argument('--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging mode (verbose output)')
     parser.add_argument('--combine', action='store_true', help='Combine all chunks downloaded so far')
+    parser.add_argument('-v', '--version', action='version', version=__version__)
     args = parser.parse_args()
     logger.setLevel(args.loglevel)
     boost = TorBoost(args)
@@ -178,6 +187,7 @@ def entry_point():
         boost.combine()
         exit()
     boost.connect()
+    logger.info(f'Starting download...')
     # NOTE: Do NOT use HEAD here, leads to inconsistent results
     response = boost.request({'Accept-Encoding': 'identity'}, boost.procs[0]['SocksPort'])
     logger.debug(f'Initial response headers: {response.headers}')

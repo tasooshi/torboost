@@ -2,7 +2,7 @@
 #######################################################################
 # License: MIT License                                                #
 # Homepage: https://github.com/tasooshi/torboost/                     #
-# Version: 0.9.1                                                      #
+# Version: 0.9.2                                                      #
 #######################################################################
 
 import setuptools
@@ -14,7 +14,7 @@ with open('README.md') as f:
 
 setuptools.setup(
     name='torboost',
-    version='0.9.1',
+    version='0.9.2',
     author='tasooshi',
     author_email='tasooshi@pm.me',
     description='Download utility for Tor',
