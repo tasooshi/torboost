@@ -12,7 +12,7 @@ import threading
 import urllib3.exceptions
 
 
-__version__ = '0.9.2'
+__version__ = '0.9.3'
 
 
 logging.basicConfig(format='%(name)s %(levelname)s [%(asctime)s] %(message)s', level=logging.INFO)
@@ -107,12 +107,16 @@ class TorBoost:
         config.update(self.config)
         logger.info(f'Bootstrapping Tor process {proc_no}')
         logger.debug(f'with config: {config}')
-        proc = stem.process.launch_tor_with_config(
-            take_ownership=True,
-            config = config,
-            timeout=self.args.timeout,
-            init_msg_handler = self.print_bootstrap,
-        )
+        try:
+            proc = stem.process.launch_tor_with_config(
+                take_ownership=True,
+                config = config,
+                timeout=self.args.timeout,
+                init_msg_handler = self.print_bootstrap,
+            )
+        except OSError:
+            logger.error(f'Could not start Tor process, conflicting ports?')
+            exit()
         self.procs[proc_no] = config
         self.procs[proc_no]['process'] = proc
 
@@ -132,6 +136,10 @@ class TorBoost:
                 with open(self.output_dir / fil, 'rb') as inp:
                     shutil.copyfileobj(inp, dest_file)
         logger.info(f'Saved: {orig_name} to {self.DOWNLOADS_DIR}')
+
+    def reset(self):
+        shutil.rmtree(pathlib.Path(self.WORKERS_DIR))
+        logger.info(f'Removed data directories')
 
     def connect(self):
         for proc_no in range(self.args.tor_processes):
@@ -179,6 +187,7 @@ def entry_point():
     parser.add_argument('--config', help='Custom Tor configuration file (JSON)')
     parser.add_argument('--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging mode (verbose output)')
     parser.add_argument('--combine', action='store_true', help='Combine all chunks downloaded so far')
+    parser.add_argument('--reset', action='store_true', help='Remove data directories and rebuild circuits')
     parser.add_argument('-v', '--version', action='version', version=__version__)
     args = parser.parse_args()
     logger.setLevel(args.loglevel)
@@ -186,14 +195,21 @@ def entry_point():
     if args.combine:
         boost.combine()
         exit()
+    if args.reset:
+        boost.reset()
+        exit()
     boost.connect()
     logger.info(f'Starting download...')
     # NOTE: Do NOT use HEAD here, leads to inconsistent results
-    response = boost.request({'Accept-Encoding': 'identity'}, boost.procs[0]['SocksPort'])
-    logger.debug(f'Initial response headers: {response.headers}')
-    boost.content_size = int(response.headers['Content-Length'])
-    logger.info(f'Download size: {boost.content_size}')
-    boost.start()
+    try:
+        response = boost.request({'Accept-Encoding': 'identity'}, boost.procs[0]['SocksPort'])
+    except RuntimeError:
+        logger.error(f'Download could not be started, no response from the server')
+    else:
+        logger.debug(f'Initial response headers: {response.headers}')
+        boost.content_size = int(response.headers['Content-Length'])
+        logger.info(f'Download size: {boost.content_size}')
+        boost.start()
 
 
 if __name__ == '__main__':
