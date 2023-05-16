@@ -5,14 +5,16 @@ import json
 import logging
 import pathlib
 import queue
-import requests
 import shutil
-import stem.process
 import threading
 import urllib3.exceptions
 
+import requests
+import stem.process
+from stem.util import system
 
-__version__ = '0.9.3'
+
+__version__ = '0.9.4'
 
 
 logging.basicConfig(format='%(name)s %(levelname)s [%(asctime)s] %(message)s', level=logging.INFO)
@@ -45,7 +47,7 @@ class TorBoost:
 
     def request(self, headers, socks_port):
         headers.update({
-            'User-Agent': self.args.user_agent    
+            'User-Agent': self.args.user_agent
         })
         proxies = {
             'http': f'socks5h://localhost:{socks_port}',
@@ -110,9 +112,9 @@ class TorBoost:
         try:
             proc = stem.process.launch_tor_with_config(
                 take_ownership=True,
-                config = config,
+                config=config,
                 timeout=self.args.timeout,
-                init_msg_handler = self.print_bootstrap,
+                init_msg_handler=self.print_bootstrap,
             )
         except OSError:
             logger.error(f'Could not start Tor process, conflicting ports?')
@@ -191,6 +193,9 @@ def entry_point():
     parser.add_argument('-v', '--version', action='version', version=__version__)
     args = parser.parse_args()
     logger.setLevel(args.loglevel)
+    if system.is_windows():
+        logger.info(f'Custom `timeout` is not supported on Windows, restoring default value: {stem.process.DEFAULT_INIT_TIMEOUT}')
+        args.timeout = stem.process.DEFAULT_INIT_TIMEOUT
     boost = TorBoost(args)
     if args.combine:
         boost.combine()
