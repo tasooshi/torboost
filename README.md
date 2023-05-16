@@ -13,7 +13,6 @@ This tool was designed specifically for downloading large files from onion servi
 ## Requirements
 
 * `tor`
-* GNU/Linux only!
 
 ## Installation
 
