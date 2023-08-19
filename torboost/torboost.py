@@ -14,7 +14,7 @@ import stem.process
 from stem.util import system
 
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 
 
 logging.basicConfig(format='%(name)s %(levelname)s [%(asctime)s] %(message)s', level=logging.INFO)
