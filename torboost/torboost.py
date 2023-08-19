@@ -184,7 +184,7 @@ def entry_point():
     parser.add_argument('--control-port-start', type=int, default=10080, help='First port for Tor control')
     parser.add_argument('--socks-port-start', type=int, default=9080, help='First port for SOCKS')
     parser.add_argument('--timeout', type=int, default=300, help='Timeout for Tor relay connection')
-    parser.add_argument('--chunk-size', default=50000000, help='Size of a single download block (in bytes)')
+    parser.add_argument('--chunk-size', type=int, default=50000000, help='Size of a single download block (in bytes)')
     parser.add_argument('--user-agent', default=default_headers['User-Agent'], help='User-Agent header')
     parser.add_argument('--config', help='Custom Tor configuration file (JSON)')
     parser.add_argument('--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging mode (verbose output)')
